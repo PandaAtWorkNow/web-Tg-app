@@ -1,0 +1,79 @@
+<!-- app/index.html -->
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Запись</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root { --bg:#0f1b2d; --card:#16243a; --txt:#e8f0ff; --muted:#9bb0d1; }
+    html,body {margin:0;height:100%;background:var(--bg);color:var(--txt);font-family:system-ui,Segoe UI,Roboto,Arial;}
+    .wrap {max-width:520px;margin:0 auto;padding:20px;}
+    .card {background:var(--card);border-radius:16px;padding:18px;box-shadow:0 6px 24px rgba(0,0,0,.25);}
+    h1{font-size:18px;margin:0 0 12px;}
+    label{display:block;margin:12px 0 6px;color:var(--muted);font-size:13px;}
+    input,select,button{width:100%;padding:12px 14px;border-radius:12px;border:1px solid #22324e;background:#0e1a2b;color:var(--txt);font-size:14px;outline:none;}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+    .spacer{height:12px;}
+    .hint{font-size:12px;color:var(--muted);margin-top:8px;}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <h1>🗓 Запись на услугу</h1>
+    <label>Дата</label>
+    <input id="date" type="date" min="" max=""/>
+    <div class="row">
+      <div>
+        <label>Время</label>
+        <select id="time">
+          <option>10:00</option><option>11:00</option><option>12:00</option>
+          <option>14:00</option><option>15:00</option><option>16:00</option>
+        </select>
+      </div>
+      <div>
+        <label>Мастер</label>
+        <select id="master">
+          <option>Любой</option><option>Анна</option><option>Мария</option><option>Елена</option>
+        </select>
+      </div>
+    </div>
+    <div class="spacer"></div>
+    <div class="hint">Нажмите кнопку подтверждения внизу, чтобы отправить данные в бота.</div>
+  </div>
+</div>
+
+<script>
+  const tg = window.Telegram.WebApp;
+  tg.expand();                // максимально раскрыть
+  tg.MainButton.setText("Подтвердить запись");
+  tg.MainButton.show();
+
+  // Ограничим выбор дат: сегодня…+30 дней
+  const today = new Date();
+  const max = new Date(); max.setDate(today.getDate() + 30);
+  const pad = n => String(n).padStart(2,'0');
+  const toISO = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+
+  const inDate = document.getElementById('date');
+  inDate.min = toISO(today);
+  inDate.max = toISO(max);
+  inDate.value = toISO(today);
+
+  tg.onEvent('mainButtonClicked', () => {
+    const payload = {
+      action: "create_booking",
+      date: inDate.value,
+      time: document.getElementById('time').value,
+      master: document.getElementById('master').value
+    };
+    tg.sendData(JSON.stringify(payload)); // улетит в message.web_app_data.data
+    tg.close(); // по желанию: закрыть мини-апп
+  });
+
+  // Тёмная/светлая тема Telegram автоматически подхватывается фоном WebApp
+</script>
+</body>
+</html>
